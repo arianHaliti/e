@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>A Letter For You 💌</title>
+
+    <style>
+
+        :root {
+            --bg-start: #1a0011;
+            --bg-end: #2d0a1e;
+            --accent: #ff4f81;
+            --accent-glow: rgba(255, 79, 129, 0.5);
+            --gold: #ffd700;
+            --white: #fff;
+            --soft-pink: #ffe0ec;
+            --card-bg: rgba(255, 255, 255, 0.06);
+            --card-border: rgba(255, 255, 255, 0.12);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(160deg, var(--bg-start), var(--bg-end));
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .stars {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--white);
+            border-radius: 50%;
+            animation: twinkle ease-in-out infinite alternate;
+        }
+
+        @keyframes twinkle {
+            from { opacity: 0.2; transform: scale(1); }
+            to   { opacity: 1;   transform: scale(1.4); }
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 460px;
+            min-height: 80vh;
+        }
+
+        .screen.active {
+            display: flex;
+            animation: fadeSlideIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .envelope-wrap {
+            perspective: 800px;
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+
+        .envelope {
+            width: 220px;
+            height: 160px;
+            position: relative;
+            transition: transform 0.4s ease;
+        }
+
+        .envelope:hover {
+            transform: scale(1.05);
+        }
+
+        .envelope-body {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #ff6b8a, #e74c6f);
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 12px 40px rgba(255, 79, 129, 0.35);
+            overflow: hidden;
+        }
+
+        .envelope-body::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 2px dashed rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+        }
+
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            border-left: 110px solid transparent;
+            border-right: 110px solid transparent;
+            border-top: 80px solid #c2185b;
+            transform-origin: top;
+            transition: transform 0.6s ease;
+            z-index: 2;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+        }
+
+        .envelope.open .envelope-flap {
+            transform: rotateX(180deg);
+        }
+
+        .seal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            z-index: 3;
+            animation: pulse 1.8s ease infinite;
+            filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50%      { transform: translate(-50%, -50%) scale(1.15); }
+        }
+
+        .letter-peek {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(0);
+            width: 80%;
+            height: 60px;
+            background: var(--soft-pink);
+            border-radius: 6px 6px 0 0;
+            z-index: 1;
+            opacity: 0;
+            transition: transform 0.7s 0.2s ease, opacity 0.3s 0.2s ease;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .envelope.open .letter-peek {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-55px);
+        }
+
+        .envelope-prompt {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+            animation: subtleBounce 2s ease infinite;
+        }
+
+        @keyframes subtleBounce {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-6px); }
+        }
+
+        .letter-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 36px 28px;
+            max-width: 380px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 0 60px rgba(255, 79, 129, 0.1);
+        }
+
+        .letter-card::before {
+            content: '💌';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+        }
+
+        .letter-greeting {
+            font-size: 1.4rem;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .letter-body {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 24px;
+            font-style: italic;
+        }
+
+        .letter-body span {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .letter-body span.revealed {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .continue-btn {
+            display: inline-block;
+            padding: 12px 36px;
+            background: linear-gradient(135deg, var(--accent), #c2185b);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 25px var(--accent-glow);
+        }
+
+        .continue-btn.visible {
+            opacity: 1;
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 10px 35px var(--accent-glow);
+        }
+
+
+        .question-gif {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            margin-bottom: 20px;
+            border-radius: 16px;
+            transition: all 0.4s ease;
+        }
+
+        .question-title {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 32px;
+        }
+
+        .answer-buttons {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            min-height: 80px;
+        }
+
+        .btn-answer {
+            padding: 14px 40px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .btn-answer-yes {
+            background: linear-gradient(135deg, var(--accent), #c2185b);
+            color: var(--white);
+            box-shadow: 0 6px 25px var(--accent-glow);
+        }
+
+        .btn-answer-yes:hover {
+            transform: scale(1.08);
+            box-shadow: 0 10px 35px var(--accent-glow);
+        }
+
+        .btn-answer-no {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-answer-no:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .no-counter {
+            margin-top: 16px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            min-height: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .screen { padding: 16px; }
+            .question-gif { width: 160px; height: 160px; }
+            .question-title { font-size: 1.6rem; }
+            .celebration-title { font-size: 1.7rem; }
+            .letter-card { padding: 28px 20px; }
+            .envelope { width: 180px; height: 130px; }
+            .envelope-flap {
+                border-left-width: 90px;
+                border-right-width: 90px;
+                border-top-width: 65px;
+            }
+        }
+        .moon {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 90% 90%, #fff 0%, #f5f5f5 40%, #ddd 70%, #bbb 100%);
+    box-shadow:
+        0 0 40px rgba(255, 255, 255, 0.4),
+        0 0 180px rgba(255, 255, 255, 0.2);
+    z-index: 1;
+    pointer-events: none;
+    animation: moonFloat 6s ease-in-out infinite;
+}
+
+@keyframes moonFloat {
+    0%, 100% { transform: translateX(-50%) translateY(0px); }
+    50% { transform: translateX(-50%) translateY(-10px); }
+}
+
+.moon::before,
+.moon::after {
+    content: "";
+    position: absolute;
+    border-radius: 45%;
+    background: rgba(0,0,0,0.08);
+}
+
+.moon::before {
+    width: 25px;
+    height: 25px;
+    top: 35px;
+    left: 40px;
+}
+
+.moon::after {
+    width: 18px;
+    height: 18px;
+    bottom: 40px;
+    right: 45px;
+}
+    </style>
+</head>
+<body>
+
+    <div class="stars" id="stars"></div>
+    <div class="moon"></div>
+
+    <canvas id="fireworks"></canvas>
+
+
+    <div class="screen active" id="screen1">
+        <img src="gifs_sad/cat_propose.gif" alt="Cat" class="question-gif" id="questionGif">
+
+        <h1 class="question-title">Will You Be My Valentine?</h1>
+
+        <div class="answer-buttons">
+            <button class="btn-answer btn-answer-yes" id="yesBtn" onclick="handleYes()">
+                Yes! 💖
+            </button>
+            <button class="btn-answer btn-answer-no" id="noBtn" onclick="handleNo()">
+                No 😢
+            </button>
+        </div>
+
+        <p class="no-counter" id="noCounter"></p>
+    </div>
+
+    <div class="screen" id="screen2">
+        <div class="envelope-wrap" onclick="openEnvelope()">
+            <div class="envelope" id="envelope">
+                <div class="envelope-flap"></div>
+                <div class="envelope-body">
+                    <span class="seal">💝</span>
+                </div>
+                <div class="letter-peek"></div>
+            </div>
+        </div>
+        <p class="envelope-prompt">Tap the envelope to open 💌</p>
+    </div>
+
+    <div class="screen" id="screen3">
+        <div class="letter-card">
+            <p class="letter-greeting">For my little baby,</p>
+
+            <div class="letter-body" id="letterBody">
+                <span>From the moment I met you, the world started making more sense.</span>
+                <span>Thank you for your kindness, your strength, and for never giving up, even when things weren’t easy.</span>
+                <span> Qdo moment që e kaloj me ty makes me feel happier and more complete, and I hope you feel the same.</span>
+                <span><span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span> I will always love you, beba jem e vogël. ❤️</span>
+            </div>
+
+            <button class="continue-btn" id="continueBtn" style="display: none;">
+                Continue →
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+
+        (function createStars() {
+            const container = document.getElementById('stars');
+            for (let i = 0; i < 80; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDuration = (1.5 + Math.random() * 3) + 's';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.width = star.style.height = (1 + Math.random() * 2) + 'px';
+                container.appendChild(star);
+            }
+        })();
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+ 
+        let noCount = 0;
+        const noMessages = [
+            "EYYY !!!",
+            "LESH !!!",
+            "My heart is breaking... 😢",
+            "This is who your saying no to...",
+        ];
+
+        const gifSequence = [
+            "gifs_sad/cat_propose.gif",
+            "gifs_sad/side_eyes/side_eyes.gif",
+            "gifs_sad/side_eyes/rock.gif",
+            "gifs_sad/New folder/thanhhuyen.gif",
+            "gifs_sad/New folder/sad_cat_ocean.gif",
+            "gifs_sad/yes_full_size.gif"
+        ];
+
+        function handleNo() {
+            noCount++;
+
+            const yesBtn = document.getElementById('yesBtn');
+            const noBtn = document.getElementById('noBtn');
+            const counter = document.getElementById('noCounter');
+            const gif = document.getElementById('questionGif');
+
+            if (noCount <= gifSequence.length - 1) {
+                gif.src = gifSequence[noCount];
+            }
+
+            if (noCount >= 5) {
+                yesBtn.style.transform = 'scale(2)';
+                noBtn.style.display = 'none';
+                counter.textContent = "There's only one choice now... 💖";
+            } else {
+                const yesScale = 1 + (noCount * 0.2);
+                yesBtn.style.transform = `scale(${yesScale})`;
+
+                const noScale = Math.max(0.5, 1 - (noCount * 0.15));
+                noBtn.style.transform = `scale(${noScale})`;
+                noBtn.style.opacity = Math.max(0.4, 1 - (noCount * 0.15));
+
+                const msg = noMessages[Math.min(noCount - 1, noMessages.length - 1)];
+                counter.textContent = msg;
+            }
+        }
+
+        function handleYes() {
+            showScreen('screen2');
+        }
+
+        let envelopeOpened = false;
+
+        function openEnvelope() {
+            if (envelopeOpened) return;
+            envelopeOpened = true;
+
+            const envelope = document.getElementById('envelope');
+            envelope.classList.add('open');
+
+            setTimeout(() => showScreen('screen3'), 1200);
+
+            setTimeout(revealLetterWords, 1600);
+        }
+
+   
+        function revealLetterWords() {
+            const spans = document.querySelectorAll('#letterBody span');
+            spans.forEach((span, i) => {
+                setTimeout(() => {
+                    span.classList.add('revealed');
+                }, i * 900);
+            });
+        }
+
+    </script>
+</body>
+</html>
