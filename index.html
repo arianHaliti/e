@@ -326,6 +326,131 @@
             min-height: 20px;
         }
 
+        /* Lock Screen Styles */
+        .lock-screen {
+            margin-top: -95px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+    
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .lock-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: lockFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes lockFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .lock-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--white);
+        }
+
+        .lock-subtitle {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 40px;
+        }
+
+        .pin-display {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .pin-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .pin-dot.filled {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .pin-dot.error {
+            background: #ff4444;
+            border-color: #ff4444;
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .key {
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 50%;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            color: var(--white);
+            font-size: 1.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .key:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .key:hover {
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .key.delete {
+            background: rgba(255, 79, 129, 0.2);
+            font-size: 1.2rem;
+        }
+
+        .key.delete:hover {
+            background: rgba(255, 79, 129, 0.3);
+        }
+
+        .error-message {
+            color: #ff4444;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            min-height: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .error-message.show {
+            opacity: 1;
+        }
+
         @media (max-width: 480px) {
             .screen { padding: 16px; }
             .question-gif { width: 160px; height: 160px; }
@@ -338,6 +463,9 @@
                 border-right-width: 90px;
                 border-top-width: 65px;
             }
+            .lock-screen { max-width: 360px; }
+            .keypad { max-width: 250px; gap: 12px; }
+            .key { font-size: 1.5rem; }
         }
         .moon {
     position: fixed;
@@ -391,8 +519,43 @@
 
     <canvas id="fireworks"></canvas>
 
+    <!-- Lock Screen -->
+    <div class="screen active" id="screen0">
+        <div class="lock-screen">
+            <div class="lock-icon">🔒</div>
+            <h2 class="lock-title">Enter Passcode</h2>
+            <p class="lock-subtitle">Please enter the code to continue</p>
+            
+            <div class="pin-display" id="pinDisplay">
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+            </div>
 
-    <div class="screen active" id="screen1">
+            <div class="keypad">
+                <button class="key" onclick="addDigit('1')">1</button>
+                <button class="key" onclick="addDigit('2')">2</button>
+                <button class="key" onclick="addDigit('3')">3</button>
+                <button class="key" onclick="addDigit('4')">4</button>
+                <button class="key" onclick="addDigit('5')">5</button>
+                <button class="key" onclick="addDigit('6')">6</button>
+                <button class="key" onclick="addDigit('7')">7</button>
+                <button class="key" onclick="addDigit('8')">8</button>
+                <button class="key" onclick="addDigit('9')">9</button>
+                <button class="key delete" onclick="deleteDigit()">⌫</button>
+                <button class="key" onclick="addDigit('0')">0</button>
+                <button class="key" style="opacity: 0; pointer-events: none;"></button>
+            </div>
+
+            <div class="error-message" id="errorMessage">Incorrect passcode</div>
+        </div>
+    </div>
+
+    <div class="screen" id="screen1">
         <img src="gifs_sad/cat_propose.gif" alt="Cat" class="question-gif" id="questionGif">
 
         <h1 class="question-title">Will You Be My Valentine?</h1>
@@ -447,6 +610,8 @@
 
 
     <script>
+       // Lock Screen Logic
+       const cp=[49,50,52,52,52,50,48];let enteredPin="";function addDigit(e){enteredPin.length<7&&(enteredPin+=e,updatePinDisplay(),7===enteredPin.length&&setTimeout(checkPin,300))}function deleteDigit(){0<enteredPin.length&&(enteredPin=enteredPin.slice(0,-1),updatePinDisplay(),document.getElementById("errorMessage").classList.remove("show"))}function updatePinDisplay(){const e=document.querySelectorAll(".pin-dot");e.forEach((e,t)=>{e.classList.remove("error"),t<enteredPin.length?e.classList.add("filled"):e.classList.remove("filled")})}function checkPin(){if(7===enteredPin.length){let t=!0;for(let e=0;e<7;e++)if(enteredPin.charCodeAt(e)!==cp[e]){t=!1;break}if(t)document.getElementById("errorMessage").classList.remove("show"),showScreen("screen1"),enteredPin="",updatePinDisplay();else{const e=document.querySelectorAll(".pin-dot");e.forEach(e=>e.classList.add("error")),document.getElementById("errorMessage").classList.add("show"),setTimeout(()=>{enteredPin="",updatePinDisplay(),document.getElementById("errorMessage").classList.remove("show")},1e3)}}}
 
         (function createStars() {
             const container = document.getElementById('stars');
